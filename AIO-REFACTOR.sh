@@ -4,7 +4,6 @@
 NFS_SERVER="192.168.0.21"
 NFS_VERSION="4.2"
 DOCKER_NETWORK="proxy"
-DOCKER_COMPOSE_OPTIONS="-d --force-recreate"
 
 # Define paths
 YAML_PATH="/mnt/TrueNAS-01/Docker/YAML-Files"
@@ -17,7 +16,7 @@ options=("Docker" "Automount YAML" "Automount docker_vol" "Install Coral-TPU" "C
 # Functions
 install_docker() {
     if [ "$(id -u)" -ne 0 ]; then
-        echo -e "${RED}You need to run this script with sudo.${ENDCOLOR}"
+        echo -e "You need to run this script with sudo."
         exit 1
     fi
     sudo curl -fsSL https://get.docker.com | sh
@@ -54,7 +53,7 @@ deploy_service() {
     local service_name=$1
     local compose_file=$2
     sudo docker network create "$DOCKER_NETWORK"
-    sudo docker compose -f "/yaml-files/$compose_file -d --force-recreate"
+    sudo docker compose -f up "/yaml-files/$compose_file -d --force-recreate"
 }
 
 # Ensure the directory exists in docker_vol
@@ -62,7 +61,7 @@ ensure_docker_vol_directory() {
     local service_name=$1
     local docker_vol_directory="$DOCKER_VOL_PATH_EXTERNAL/$service_name"
     if [ ! -d "$docker_vol_directory" ]; then
-        echo -e "${RED}Directory $docker_vol_directory does not exist. Creating it now...${ENDCOLOR}"
+        echo -e "Directory $docker_vol_directory does not exist. Creating it now..."
         sudo mkdir -p "$docker_vol_directory"
     fi
 }
@@ -72,7 +71,7 @@ ensure_logs_directory() {
     local service_name=$1
     local logs_directory="$LOGS_PATH_EXTERNAL/$service_name"
     if [ ! -d "$logs_directory" ]; then
-        echo -e "${RED}Directory $logs_directory does not exist. Creating it now...${ENDCOLOR}"
+        echo -e "Directory $logs_directory does not exist. Creating it now..."
         sudo mkdir -p "$logs_directory"
     fi
 }
@@ -118,7 +117,7 @@ select opt in "${options[@]}"; do
             exit
             ;;
         *)
-            echo -e "${RED}Invalid option, please select a valid one.${ENDCOLOR}"
+            echo -e "Invalid option, please select a valid one."
             ;;
     esac
 done
