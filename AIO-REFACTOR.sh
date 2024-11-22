@@ -85,7 +85,7 @@ select opt in "${options[@]}"; do
     # Convert selected option to lowercase
     service_name=$(echo "$opt" | tr '[:upper:]' '[:lower:]')
 
-    case $opt in
+    case $service_name in
         "Docker")
             install_docker
             exit
