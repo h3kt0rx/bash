@@ -118,7 +118,7 @@ select opt in "${options[@]}"; do
             exit
             ;;
         *)
-            echo -e "Invalid option, please select a valid one."
+            echo -e "${RED}Invalid option, please select a valid one.${ENDCOLOR}"
             ;;
     esac
 done
