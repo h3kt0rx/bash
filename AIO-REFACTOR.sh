@@ -83,9 +83,9 @@ echo "Please select what you want to install:"
 
 select opt in "${options[@]}"; do
     # Convert selected option to lowercase
-    service_name=$(echo "$opt" | tr '[:upper:]' '[:lower:]')
+service_name=$(echo "$opt" | tr '[:upper:]' '[:lower:]')
 
-    case $service_name in
+    case $opt in
         "Docker")
             install_docker
             exit
@@ -118,7 +118,7 @@ select opt in "${options[@]}"; do
             exit
             ;;
         *)
-            echo -e "${RED}Invalid option, please select a valid one.${ENDCOLOR}"
+            echo -e "Invalid option, please select a valid one."
             ;;
     esac
 done
