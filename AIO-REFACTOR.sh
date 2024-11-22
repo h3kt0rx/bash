@@ -54,7 +54,7 @@ deploy_service() {
     local service_name=$1
     local compose_file=$2
     sudo docker network create "$DOCKER_NETWORK"
-    sudo docker compose -f "/yaml-files/$compose_file" $DOCKER_COMPOSE_OPTIONS
+    sudo docker compose -f "/yaml-files/$compose_file -d --force-recreate"
 }
 
 # Ensure the directory exists in docker_vol
