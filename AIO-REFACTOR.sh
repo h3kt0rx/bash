@@ -45,7 +45,7 @@ mount_nfs() {
     local mount_point=$1
     local nfs_path=$2
     sudo mkdir -p "$mount_point"
-    echo "$NFS_SERVER:$nfs_path $mount_point nfs $NFS_VERSION,async,noatime,hard 0 0" | sudo tee -a /etc/fstab
+    echo "$nfs_path $mount_point nfs $NFS_VERSION,async,noatime,hard 0 0" | sudo tee -a /etc/fstab
     sudo systemctl daemon-reload
     sudo mount -t nfs -o "$NFS_VERSION,async,noatime,hard" "$NFS_SERVER:$nfs_path" "$mount_point"
 }
