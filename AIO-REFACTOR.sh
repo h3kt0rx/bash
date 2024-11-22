@@ -47,7 +47,7 @@ mount_nfs() {
     sudo mkdir -p "$mount_point"
     echo "$nfs_path $mount_point nfs $NFS_VERSION,async,noatime,hard 0 0" | sudo tee -a /etc/fstab
     sudo systemctl daemon-reload
-    sudo mount -t nfs -o "$NFS_VERSION,async,noatime,hard" "$nfs_path" "$mount_point"
+    sudo mount -t nfs "$nfs_path" "$mount_point"
 }
 
 deploy_service() {
