@@ -112,8 +112,8 @@ select opt in "${options[@]}"; do
         "Cloudflared" | "Code-Server" | "Flaresolverr" | "Frigate" | "HomeAssistant" | "Homepage" | "Hoshinova" | "Jellyfin" | "Jellyseerr")
             install_mount_dependencies
             # Mount NFS volumes (in lowercase)
-            mount_nfs "/docker_vol/$service_name" "$NFS_SERVER:$DOCKER_VOL_PATH_EXTERNAL/$opt"
-            mount_nfs "/docker_vol/ALL_LOGS/$service_name" "$NFS_SERVER:$LOGS_PATH_EXTERNAL/$opt"
+            mount_nfs "/docker_vol/$service_name" "$NFS_SERVER:$DOCKER_VOL_PATH_EXTERNAL/$service_name"
+            mount_nfs "/docker_vol/ALL_LOGS/$service_name" "$NFS_SERVER:$LOGS_PATH_EXTERNAL/$service_name"
             deploy_service "$service_name" "$service_name.yml"
             exit
             ;;
