@@ -11,7 +11,7 @@ DOCKER_VOL_PATH_EXTERNAL="/mnt/TrueNAS-02/Docker/docker_vol"
 LOGS_PATH_EXTERNAL="/mnt/TrueNAS-02/Docker/docker_vol/ALL_LOGS"
 
 # Define the prompt options
-options=("Docker" "Automount YAML" "Automount docker_vol" "Install Coral-TPU" "Cloudflared" "Code-Server" "Flaresolverr" "Frigate" "HomeAssistant" "Homepage" "Hoshinova" "Jellyfin" "Jellyseerr")
+options=("Docker" "Automount YAML" "Automount docker_vol" "Install Coral-TPU" "Cloudflared" "Code-Server" "Flaresolverr" "Frigate" "HomeAssistant" "Homepage" "Hoshinova" "Jellyfin" "Jellyseerr" "Lancache" "MineCraft-01" "MineCraft-02" "MQTT" "NetBoot_XYZ" "NextPVR" "PalWorld" "Prowlarr" "qBittorrent" "Radarr" "Semaphore" "Sonarr" "Traefik" "UptimeKuma" "Vaultwarden" "WallOS" "Watchtower")
 
 # Functions
 install_docker() {
@@ -44,7 +44,7 @@ mount_nfs() {
     local mount_point=$1
     local nfs_path=$2
     sudo mkdir -p "$mount_point"
-    echo "$nfs_path $mount_point nfs $NFS_VERSION,async,noatime,hard 0 0" | sudo tee -a /etc/fstab
+    echo "$nfs_path $mount_point  nfs      rw,async,noatime,hard,vers=$NFS_VERSION    0    0" | sudo tee -a /etc/fstab
     sudo systemctl daemon-reload
     sudo mount -t nfs "$nfs_path" "$mount_point"
 }
@@ -56,29 +56,39 @@ deploy_service() {
     sudo docker compose -f "/yaml-files/$compose_file" up -d --force-recreate
 }
 
-# Ensure the directory exists in docker_vol
-ensure_docker_vol_directory() {
-    local service_name=$1
-    local docker_vol_directory="$DOCKER_VOL_PATH_EXTERNAL/$service_name"
-    if [ ! -d "$docker_vol_directory" ]; then
-        echo -e "Directory $docker_vol_directory does not exist. Creating it now..."
-        sudo mkdir -p "$docker_vol_directory"
-    fi
-}
-
-# Ensure the ALL_LOGS directory exists
-ensure_logs_directory() {
-    local service_name=$1
-    local logs_directory="$LOGS_PATH_EXTERNAL/$service_name"
-    if [ ! -d "$logs_directory" ]; then
-        echo -e "Directory $logs_directory does not exist. Creating it now..."
-        sudo mkdir -p "$logs_directory"
-    fi
+# Ask for the next action after the main selection
+choose_action() {
+    echo ""
+    echo ""
+    echo -e "\033[32mWhat action do you want to do for \033[31m$1\033[31m\033[32m\033[0m?"
+    select action in "Mount Directories" "Deploy/Re-Create the Service" "Both"; do
+        case $action in
+            "Mount Directories")
+                mount_nfs "/docker_vol/$1" "$NFS_SERVER:$DOCKER_VOL_PATH_EXTERNAL/$1"
+                mount_nfs "/docker_vol/ALL_LOGS/$1" "$NFS_SERVER:$LOGS_PATH_EXTERNAL/$1"
+                break
+                ;;
+            "Deploy/Re-Create the Service")
+                deploy_service "$1" "$1.yml"
+                break
+                ;;
+            "Both")
+                mount_nfs "/docker_vol/$1" "$NFS_SERVER:$DOCKER_VOL_PATH_EXTERNAL/$1"
+                mount_nfs "/docker_vol/ALL_LOGS/$1" "$NFS_SERVER:$LOGS_PATH_EXTERNAL/$1"
+                deploy_service "$1" "$1.yml"
+                break
+                ;;
+            *)
+                echo "Invalid choice. Please select a valid option."
+                ;;
+        esac
+    done
 }
 
 # Main script execution
 echo ""
-echo "Please select what you want to install:"
+echo ""
+echo -e "\033[32mPlease select what you want to install:\033[32m\033[0m"
 
 select opt in "${options[@]}"; do
     # Convert selected option to lowercase
@@ -96,7 +106,6 @@ select opt in "${options[@]}"; do
             ;;
         "Automount docker_vol")
             install_mount_dependencies
-            # Ensure the local /docker_vol directory exists before mounting external volumes
             mount_nfs "/docker_vol" "$NFS_SERVER:$DOCKER_VOL_PATH_EXTERNAL"
             exit
             ;;
@@ -108,16 +117,40 @@ select opt in "${options[@]}"; do
             sudo apt-get update -y
             sudo apt-get install gasket-dkms libedgetpu1-std -y
             ;;
-        "Cloudflared" | "Code-Server" | "Flaresolverr" | "Frigate" | "HomeAssistant" | "Homepage" | "Hoshinova" | "Jellyfin" | "Jellyseerr")
+        "Cloudflared" | "CrowdSec" | "Flaresolverr" | "Frigate" | "HomeAssistant" | "Homepage" | "Hoshinova" | "Jellyfin" | "Jellyseerr" | "Lancache" | "MineCraft-01" | "MineCraft-02" | "MQTT" | "NetBoot_XYZ" | "NextPVR" | "PalWorld" | "Prowlarr" | "qBittorrent" | "Radarr" | "Semaphore" | "Sonarr" | "Traefik" | "UptimeKuma" | "Vaultwarden" | "WallOS" | "Watchtower")
             install_mount_dependencies
-            # Mount NFS volumes (in lowercase)
-            mount_nfs "/docker_vol/$service_name" "$NFS_SERVER:$DOCKER_VOL_PATH_EXTERNAL/$service_name"
-            mount_nfs "/docker_vol/ALL_LOGS/$service_name" "$NFS_SERVER:$LOGS_PATH_EXTERNAL/$service_name"
-            deploy_service "$service_name" "$service_name.yml"
+            choose_action "$service_name"
+            exit
+            ;;
+        "Code-Server")
+            install_mount_dependencies
+            mount_nfs "/docker_vol" "$NFS_SERVER:$DOCKER_VOL_PATH_EXTERNAL"
+            choose_action "$service_name"
             exit
             ;;
         *)
-            echo -e "Invalid option, please select a valid one."
+            echo "Invalid choice. Please select a valid option."
             ;;
     esac
 done
+#
+######### LANCACHE_PREFILL ###########
+# sudo docker run -it --rm --net=host \
+# --volume /dockermount/lancache/prefill/config:/Config \
+# -e TZ="America/Detroit" \
+# --name lancache-prefill \
+# tpill90/steam-lancache-prefill:latest \
+# prefill --unit bytes
+######### LABELS - EXAMPLE ###########
+    # labels:
+    #   - "traefik.enable=true"
+    #   - "traefik.http.routers.qbittorrent-vpn.entrypoints=http"
+    #   - "traefik.http.routers.qbittorrent-vpn.rule=Host(`qt.local.ortegatalks.net`)"
+    #   - "traefik.http.middlewares.qbittorrent-vpn-https-redirect.redirectscheme.scheme=https"
+    #   - "traefik.http.routers.qbittorrent-vpn.middlewares=qbittorrent-vpn-https-redirect"
+    #   - "traefik.http.routers.qbittorrent-vpn-secure.entrypoints=https"
+    #   - "traefik.http.routers.qbittorrent-vpn-secure.tls.certresolver=cloudflare"
+    #   - "traefik.http.routers.qbittorrent-vpn-secure.rule=Host(`qt.local.ortegatalks.net`)"
+    #   - "traefik.http.routers.qbittorrent-vpn-secure.tls=true"
+    #   - "traefik.http.routers.qbittorrent-vpn-secure.service=qbittorrent-vpn"
+    #   - "traefik.http.services.qbittorrent-vpn.loadbalancer.server.port=27981"
