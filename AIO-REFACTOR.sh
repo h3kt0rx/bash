@@ -11,7 +11,7 @@ DOCKER_VOL_PATH_EXTERNAL="/mnt/TrueNAS-02/Docker/docker_vol"
 LOGS_PATH_EXTERNAL="/mnt/TrueNAS-02/Docker/docker_vol/ALL_LOGS"
 
 # Define the prompt options
-options=("Docker" "Automount YAML" "Automount docker_vol" "Install Coral-TPU" "Cloudflared" "Code-Server" "Flaresolverr" "Frigate" "HomeAssistant" "Homepage" "Hoshinova" "Jellyfin" "Jellyseerr" "Lancache" "MineCraft-01" "MineCraft-02" "MQTT" "NetBoot_XYZ" "NextPVR" "PalWorld" "Prowlarr" "qBittorrent" "Radarr" "Semaphore" "Sonarr" "Traefik" "UptimeKuma" "Vaultwarden" "WallOS" "Watchtower")
+options=("Docker" "Automount YAML" "Automount docker_vol" "Install Coral-TPU" "Cloudflared" "Code-Server" "Flaresolverr" "Frigate" "HomeAssistant" "Homepage" "Hoshinova" "InvoiceShelf" "Jellyfin" "Jellyseerr" "Lancache" "MineCraft-01" "MineCraft-02" "MQTT" "NetBoot_XYZ" "NextPVR" "PalWorld" "Prowlarr-Gluetun" "qBittorrent" "qBittorrent-Gluetun" "Radarr" "Recyclarr" "Semaphore" "Sonarr" "stirlingPDF" "Traefik" "UptimeKuma" "Vaultwarden" "WallOS" "Watchtower")
 
 # Functions
 install_docker() {
@@ -117,7 +117,7 @@ select opt in "${options[@]}"; do
             sudo apt-get update -y
             sudo apt-get install gasket-dkms libedgetpu1-std -y
             ;;
-        "Cloudflared" | "CrowdSec" | "Flaresolverr" | "Frigate" | "HomeAssistant" | "Homepage" | "Hoshinova" | "Jellyfin" | "Jellyseerr" | "Lancache" | "MineCraft-01" | "MineCraft-02" | "MQTT" | "NetBoot_XYZ" | "NextPVR" | "PalWorld" | "Prowlarr" | "qBittorrent" | "Radarr" | "Semaphore" | "Sonarr" | "Traefik" | "UptimeKuma" | "Vaultwarden" | "WallOS" | "Watchtower")
+        "Cloudflared" | "CrowdSec" | "Flaresolverr" | "Frigate" | "HomeAssistant" | "Homepage" | "Hoshinova" | "InvoiceShelf" | "Jellyfin" | "Jellyseerr" | "Lancache" | "MineCraft-01" | "MineCraft-02" | "MQTT" | "NetBoot_XYZ" | "NextPVR" | "PalWorld" | "Prowlarr-Gluetun" | "qBittorrent" | "qBittorrent-Gluetun" | "Radarr" |"Recyclarr" | "Semaphore" | "Sonarr" | "stirlingPDF" | "Traefik" | "UptimeKuma" | "Vaultwarden" | "WallOS" | "Watchtower")
             install_mount_dependencies
             choose_action "$service_name"
             exit
