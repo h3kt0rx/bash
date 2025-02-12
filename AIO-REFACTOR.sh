@@ -11,7 +11,7 @@ DOCKER_VOL_PATH_EXTERNAL="/mnt/TrueNAS-02/Docker/docker_vol"
 LOGS_PATH_EXTERNAL="/mnt/TrueNAS-02/Docker/docker_vol/ALL_LOGS"
 
 # Define the prompt options
-options=("Docker" "Automount YAML" "Automount docker_vol" "Install Coral-TPU" "Cloudflared" "Code-Server" "Flaresolverr" "Frigate" "HomeAssistant" "Homepage" "Hoshinova" "InvoiceShelf" "Jellyfin" "Jellyseerr" "Lancache" "MineCraft-01" "MineCraft-02" "MQTT" "NetBoot_XYZ" "NextPVR" "PalWorld" "Prowlarr-Gluetun" "qBittorrent" "qBittorrent-Gluetun" "Radarr" "Recyclarr" "Semaphore" "Sonarr" "stirlingPDF" "Traefik" "UptimeKuma" "Vaultwarden" "WallOS" "Watchtower")
+options=("Docker" "Automount YAML" "Automount docker_vol" "Install Coral-TPU" "Bazarr" "Cloudflared" "Code-Server" "Flaresolverr" "Frigate" "HomeAssistant" "Homepage" "Hoshinova" "InvoiceShelf" "Jellyfin" "Jellyseerr" "Lancache" "MineCraft-01" "MineCraft-02" "MQTT" "NetBoot_XYZ" "NextPVR" "PalWorld" "Prowlarr-Gluetun" "qBittorrent" "qBittorrent-Gluetun" "Radarr" "Recyclarr" "Semaphore" "Sonarr" "stirlingPDF" "Tdarr" "Traefik" "UptimeKuma" "Vaultwarden" "WallOS" "Watchtower")
 
 # Functions
 install_docker() {
@@ -85,6 +85,29 @@ choose_action() {
     done
 }
 
+start_from_scratch() {
+    sudo docker stop $(sudo docker ps -a -q)
+    sudo umount -R /docker_vol/
+
+    # Verify that /docker_vol is unmounted
+    if mount | grep -q "/docker_vol"; then
+        echo "Warning: /docker_vol is still mounted. Trying again..."
+        sudo umount -R /docker_vol/
+    else
+        echo "/docker_vol successfully unmounted."
+    fi
+
+    # Remove lines containing "/docker_vol" from /etc/fstab
+    sudo sed -i '/\/docker_vol/d' /etc/fstab
+    echo "Check /etc/fstab contents"
+    sudo cat /etc/fstab
+    echo "List mounts on system"
+    sudo df -h 
+    read -n 1 -s -r -p "Press any key to exit..."
+    echo ""
+}
+
+
 # Main script execution
 echo ""
 echo ""
@@ -117,7 +140,7 @@ select opt in "${options[@]}"; do
             sudo apt-get update -y
             sudo apt-get install gasket-dkms libedgetpu1-std -y
             ;;
-        "Cloudflared" | "CrowdSec" | "Flaresolverr" | "Frigate" | "HomeAssistant" | "Homepage" | "Hoshinova" | "InvoiceShelf" | "Jellyfin" | "Jellyseerr" | "Lancache" | "MineCraft-01" | "MineCraft-02" | "MQTT" | "NetBoot_XYZ" | "NextPVR" | "PalWorld" | "Prowlarr-Gluetun" | "qBittorrent" | "qBittorrent-Gluetun" | "Radarr" |"Recyclarr" | "Semaphore" | "Sonarr" | "stirlingPDF" | "Traefik" | "UptimeKuma" | "Vaultwarden" | "WallOS" | "Watchtower")
+        "Bazarr" | "Cloudflared" | "CrowdSec" | "Flaresolverr" | "Frigate" | "HomeAssistant" | "Homepage" | "Hoshinova" | "InvoiceShelf" | "Jellyfin" | "Jellyseerr" | "Lancache" | "MineCraft-01" | "MineCraft-02" | "MQTT" | "NetBoot_XYZ" | "NextPVR" | "PalWorld" | "Prowlarr-Gluetun" | "qBittorrent" | "qBittorrent-Gluetun" | "Radarr" |"Recyclarr" | "Semaphore" | "Sonarr" | "stirlingPDF" | "Tdarr" | "Traefik" | "UptimeKuma" | "Vaultwarden" | "WallOS" | "Watchtower")
             install_mount_dependencies
             choose_action "$service_name"
             exit
@@ -126,6 +149,10 @@ select opt in "${options[@]}"; do
             install_mount_dependencies
             mount_nfs "/docker_vol" "$NFS_SERVER:$DOCKER_VOL_PATH_EXTERNAL"
             choose_action "$service_name"
+            exit
+            ;;
+        "Start From Scratch")
+            start_from_scratch
             exit
             ;;
         *)
