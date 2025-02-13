@@ -147,14 +147,13 @@ choose_action_pelican_wing() {
 }
 
 start_from_scratch() {
-    sudo docker stop '$(sudo docker ps -a -q)'
-    sudo docker rm '$(sudo docker ps -a -q)'
-    sudo docker volume rm '$(sudo docker volume ls)'
-    sudo docker volume prune
+    sudo docker stop $(sudo docker ps -aq) 2>/dev/null
+    sudo docker rm $(sudo docker ps -aq) 2>/dev/null
+    sudo docker volume rm $(sudo docker volume ls -q) 2>/dev/null
+    sudo docker volume prune -f
     sudo docker network prune --force
-    sudo docker system prune -a
-    docker rmi '$(docker images -a -q)'
-    sudo umount -R /docker_vol/
+    sudo docker system prune -a --volumes --force
+    sudo docker rmi $(sudo docker images -aq) 2>/dev/null
 
     # Verify that /docker_vol is unmounted
     if mount | grep -q "/docker_vol"; then
