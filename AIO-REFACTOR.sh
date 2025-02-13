@@ -92,7 +92,7 @@ choose_action_pelican_panel() {
     select action in "Mount Directories" "Deploy/Re-Create the Service" "Both"; do
         case $action in
             "Mount Directories")
-                mount_nfs "/docker_vol/pelican/$1" "$NFS_SERVER:$DOCKER_VOL_PATH_EXTERNAL/$1"
+                mount_nfs "/docker_vol/pelican/$1" "$NFS_SERVER:$DOCKER_VOL_PATH_EXTERNAL/pelican/$1"
                 break
                 ;;
             "Deploy/Re-Create the Service")
@@ -100,7 +100,7 @@ choose_action_pelican_panel() {
                 break
                 ;;
             "Both")
-                mount_nfs "/docker_vol/pelican/$1" "$NFS_SERVER:$DOCKER_VOL_PATH_EXTERNAL/$1"
+                mount_nfs "/docker_vol/pelican/$1" "$NFS_SERVER:$DOCKER_VOL_PATH_EXTERNAL/pelican/$1"
                 deploy_service "$1" "$1.yml"
                 break
                 ;;
