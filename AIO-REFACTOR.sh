@@ -11,7 +11,7 @@ DOCKER_VOL_PATH_EXTERNAL="/mnt/TrueNAS-02/Docker/docker_vol"
 LOGS_PATH_EXTERNAL="/mnt/TrueNAS-02/Docker/docker_vol/ALL_LOGS"
 
 # Define the prompt options
-options=("Docker" "Automount YAML" "Automount docker_vol" "Install Coral-TPU" "Bazarr" "Cloudflared" "Code-Server" "Flaresolverr" "Frigate" "HomeAssistant" "Homepage" "Hoshinova" "InvoiceShelf" "Jellyfin" "Jellyseerr" "Lancache" "MineCraft-01" "MineCraft-02" "MQTT" "NetBoot_XYZ" "NextPVR" "PalWorld" "Prowlarr-Gluetun" "qBittorrent" "qBittorrent-Gluetun" "Radarr" "Recyclarr" "Semaphore" "Sonarr" "stirlingPDF" "Tdarr" "Traefik" "UptimeKuma" "Vaultwarden" "WallOS" "Watchtower" "Start From Scratch")
+options=("Docker" "Automount YAML" "Automount docker_vol" "Install Coral-TPU" "Bazarr" "Cloudflared" "Code-Server" "Flaresolverr" "Frigate" "HomeAssistant" "Homepage" "Hoshinova" "InvoiceShelf" "Jellyfin" "Jellyseerr" "Lancache" "MineCraft-01" "MineCraft-02" "MQTT" "NetBoot_XYZ" "NextPVR" "PalWorld" "Pelican-Panel" "Pelican-Wing01" "Prowlarr-Gluetun" "qBittorrent" "qBittorrent-Gluetun" "Radarr" "Recyclarr" "Semaphore" "Sonarr" "stirlingPDF" "Tdarr" "Traefik" "UptimeKuma" "Vaultwarden" "WallOS" "Watchtower" "Start From Scratch")
 
 # Functions
 install_docker() {
@@ -85,8 +85,75 @@ choose_action() {
     done
 }
 
+choose_action_pelican_panel() {
+    echo ""
+    echo ""
+    echo -e "\033[32mWhat action do you want to do for \033[31m$1\033[31m\033[32m\033[0m?"
+    select action in "Mount Directories" "Deploy/Re-Create the Service" "Both"; do
+        case $action in
+            "Mount Directories")
+                mount_nfs "/docker_vol/pelican/$1" "$NFS_SERVER:$DOCKER_VOL_PATH_EXTERNAL/$1"
+                break
+                ;;
+            "Deploy/Re-Create the Service")
+                deploy_service "$1" "$1.yml"
+                break
+                ;;
+            "Both")
+                mount_nfs "/docker_vol/pelican/$1" "$NFS_SERVER:$DOCKER_VOL_PATH_EXTERNAL/$1"
+                deploy_service "$1" "$1.yml"
+                break
+                ;;
+            *)
+                echo "Invalid choice. Please select a valid option."
+                ;;
+        esac
+    done
+}
+choose_action_pelican_wing() {
+    echo ""
+    echo ""
+    echo -e "\033[32mWhat action do you want to do for \033[31m$1\033[31m\033[32m\033[0m?"
+    select action in "Mount Directories" "Deploy/Re-Create the Service" "Both"; do
+        case $action in
+            "Mount Directories")
+                mount_nfs "/var/lib/docker/containers" "$NFS_SERVER:$DOCKER_VOL_PATH_EXTERNAL/pelican/$1/containers"
+                mount_nfs "/etc/pelican" "$NFS_SERVER:$DOCKER_VOL_PATH_EXTERNAL/pelican/$1/etc"
+                mount_nfs "/var/lib/pelican" "$NFS_SERVER:$DOCKER_VOL_PATH_EXTERNAL/pelican/$1/lib"
+                mount_nfs "/var/log/pelican" "$NFS_SERVER:$DOCKER_VOL_PATH_EXTERNAL/pelican/$1/log"
+                mount_nfs "/tmp/pelican" "$NFS_SERVER:$DOCKER_VOL_PATH_EXTERNAL/pelican/$1/tmp"
+                mount_nfs "/etc/ssl/certs" "$NFS_SERVER:$DOCKER_VOL_PATH_EXTERNAL/pelican/$1/certs"
+                break
+                ;;
+            "Deploy/Re-Create the Service")
+                deploy_service "$1" "$1.yml"
+                break
+                ;;
+            "Both")
+                mount_nfs "/var/lib/docker/containers" "$NFS_SERVER:$DOCKER_VOL_PATH_EXTERNAL/pelican/$1/containers"
+                mount_nfs "/etc/pelican" "$NFS_SERVER:$DOCKER_VOL_PATH_EXTERNAL/pelican/$1/etc"
+                mount_nfs "/var/lib/pelican" "$NFS_SERVER:$DOCKER_VOL_PATH_EXTERNAL/pelican/$1/lib"
+                mount_nfs "/var/log/pelican" "$NFS_SERVER:$DOCKER_VOL_PATH_EXTERNAL/pelican/$1/log"
+                mount_nfs "/tmp/pelican" "$NFS_SERVER:$DOCKER_VOL_PATH_EXTERNAL/pelican/$1/tmp"
+                mount_nfs "/etc/ssl/certs" "$NFS_SERVER:$DOCKER_VOL_PATH_EXTERNAL/pelican/$1/certs"
+                deploy_service "$1" "$1.yml"
+                break
+                ;;
+            *)
+                echo "Invalid choice. Please select a valid option."
+                ;;
+        esac
+    done
+}
+
 start_from_scratch() {
     sudo docker stop $(sudo docker ps -a -q)
+    sudo docker rm $(sudo docker ps -a -q)
+    sudo docker volume rm $(sudo docker volume ls)
+    sudo docker volume prune
+    sudo docker network prune --force
+    sudo docker system prune -a
+    docker rmi $(docker images -a -q)
     sudo umount -R /docker_vol/
 
     # Verify that /docker_vol is unmounted
@@ -99,9 +166,13 @@ start_from_scratch() {
 
     # Remove lines containing "/docker_vol" from /etc/fstab
     sudo sed -i '/\/docker_vol/d' /etc/fstab
-    echo "Check /etc/fstab contents"
+    echo ""
+    echo "Check /etc/fstab contents:"
+    echo ""
     sudo cat /etc/fstab
-    echo "List mounts on system"
+    echo ""
+    echo "List mounts on system:"
+    echo ""
     sudo df -h 
     read -n 1 -s -r -p "Press any key to exit..."
     echo ""
@@ -143,6 +214,16 @@ select opt in "${options[@]}"; do
         "Bazarr" | "Cloudflared" | "CrowdSec" | "Flaresolverr" | "Frigate" | "HomeAssistant" | "Homepage" | "Hoshinova" | "InvoiceShelf" | "Jellyfin" | "Jellyseerr" | "Lancache" | "MineCraft-01" | "MineCraft-02" | "MQTT" | "NetBoot_XYZ" | "NextPVR" | "PalWorld" | "Prowlarr-Gluetun" | "qBittorrent" | "qBittorrent-Gluetun" | "Radarr" |"Recyclarr" | "Semaphore" | "Sonarr" | "stirlingPDF" | "Tdarr" | "Traefik" | "UptimeKuma" | "Vaultwarden" | "WallOS" | "Watchtower")
             install_mount_dependencies
             choose_action "$service_name"
+            exit
+            ;;
+        "Pelican-Panel")
+            install_mount_dependencies
+            choose_action_pelican_panel "$service_name"
+            exit
+            ;;
+        "Pelican-Wing01")
+            install_mount_dependencies
+            choose_action_pelican_wing "$service_name"
             exit
             ;;
         "Code-Server")
