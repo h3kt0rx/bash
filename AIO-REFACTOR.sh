@@ -3,7 +3,6 @@
 # Constants
 NFS_SERVER="192.168.0.21"
 NFS_VERSION="4.2"
-DOCKER_NETWORK="proxy"
 
 # Define paths
 YAML_PATH="/mnt/TrueNAS-01/Docker/YAML-Files"
@@ -11,7 +10,7 @@ DOCKER_VOL_PATH_EXTERNAL="/mnt/TrueNAS-02/Docker/docker_vol"
 LOGS_PATH_EXTERNAL="/mnt/TrueNAS-02/Docker/docker_vol/ALL_LOGS"
 
 # Define the prompt options
-options=("Docker" "Automount YAML" "Automount docker_vol" "Install Coral-TPU" "Install Pelican Panel" "Bazarr" "Cloudflared" "Code-Server" "Flaresolverr" "Frigate" "HomeAssistant" "Homepage" "Hoshinova" "InvoiceShelf" "Jellyfin" "Jellyseerr" "Lancache" "MineCraft-01" "MineCraft-02" "MQTT" "NetBoot_XYZ" "NextPVR" "PalWorld" "Pelican-Panel" "Pelican-Wing01" "Prowlarr-Gluetun" "qBittorrent" "qBittorrent-Gluetun" "Radarr" "Recyclarr" "Semaphore" "Sonarr" "stirlingPDF" "Tdarr" "Traefik" "UptimeKuma" "Vaultwarden" "WallOS" "Watchtower" "Start From Scratch")
+options=("Docker" "Automount YAML" "Automount docker_vol" "Install Coral-TPU" "Install Pelican Panel" "Bazarr" "Cloudflared" "Code-Server" "Flaresolverr" "Frigate" "HomeAssistant" "Homepage" "Hoshinova" "InvoiceShelf" "Jellyfin" "Jellyseerr" "Lancache" "MineCraft-01" "MineCraft-02" "MQTT" "NetBoot_XYZ" "NextPVR" "PalWorld" "Pelican-Panel" "Pelican-Wing01" "Peterodactyl-Panel" "Pterodactyl-Wing01" "Prowlarr-Gluetun" "qBittorrent" "qBittorrent-Gluetun" "Radarr" "Recyclarr" "Semaphore" "Sonarr" "stirlingPDF" "Tdarr" "Traefik" "UptimeKuma" "Vaultwarden" "WallOS" "Watchtower" "Start From Scratch")
 
 # Functions
 install_docker() {
@@ -76,7 +75,6 @@ install_pelican_panel_host() {
 deploy_service() {
     local service_name=$1
     local compose_file=$2
-    sudo docker network create "$DOCKER_NETWORK"
     sudo docker compose -f "/yaml-files/$compose_file" up -d --force-recreate
 }
 
@@ -170,6 +168,66 @@ choose_action_pelican_wing() {
     done
 }
 
+choose_action_pterodactyl_panel() {
+    echo ""
+    echo ""
+    echo -e "\033[32mWhat action do you want to do for \033[31m$1\033[31m\033[32m\033[0m?"
+    select action in "Mount Directories" "Deploy/Re-Create the Service" "Both"; do
+        case $action in
+            "Mount Directories")
+                mount_nfs "/docker_vol/pterodactyl/$1" "$NFS_SERVER:$DOCKER_VOL_PATH_EXTERNAL/pterodactyl/$1"
+                break
+                ;;
+            "Deploy/Re-Create the Service")
+                deploy_service "$1" "$1.yml"
+                break
+                ;;
+            "Both")
+                mount_nfs "/docker_vol/pterodactyl/$1" "$NFS_SERVER:$DOCKER_VOL_PATH_EXTERNAL/pterodactyl/$1"
+                deploy_service "$1" "$1.yml"
+                break
+                ;;
+            *)
+                echo "Invalid choice. Please select a valid option."
+                ;;
+        esac
+    done
+}
+choose_action_pterodactyl_wing() {
+    echo ""
+    echo ""
+    echo -e "\033[32mWhat action do you want to do for \033[31m$1\033[31m\033[32m\033[0m?"
+    select action in "Mount Directories" "Deploy/Re-Create the Service" "Both"; do
+        case $action in
+            "Mount Directories")
+                mount_nfs "/var/lib/docker/containers" "$NFS_SERVER:$DOCKER_VOL_PATH_EXTERNAL/pterodactyl/$1/containers"
+                mount_nfs "/etc/pterodactyl" "$NFS_SERVER:$DOCKER_VOL_PATH_EXTERNAL/pterodactyl/$1/etc"
+                mount_nfs "/var/lib/pterodactyl" "$NFS_SERVER:$DOCKER_VOL_PATH_EXTERNAL/pterodactyl/$1/lib"
+                mount_nfs "/var/log/pterodactyl" "$NFS_SERVER:$DOCKER_VOL_PATH_EXTERNAL/pterodactyl/$1/log"
+                mount_nfs "/tmp/pterodactyl" "$NFS_SERVER:$DOCKER_VOL_PATH_EXTERNAL/pterodactyl/$1/tmp"
+                mount_nfs "/etc/ssl/certs" "$NFS_SERVER:$DOCKER_VOL_PATH_EXTERNAL/pterodactyl/$1/certs"
+                break
+                ;;
+            "Deploy/Re-Create the Service")
+                deploy_service "$1" "$1.yml"
+                break
+                ;;
+            "Both")
+                mount_nfs "/var/lib/docker/containers" "$NFS_SERVER:$DOCKER_VOL_PATH_EXTERNAL/pterodactyl/$1/containers"
+                mount_nfs "/etc/pterodactyl" "$NFS_SERVER:$DOCKER_VOL_PATH_EXTERNAL/pterodactyl/$1/etc"
+                mount_nfs "/var/lib/pterodactyl" "$NFS_SERVER:$DOCKER_VOL_PATH_EXTERNAL/pterodactyl/$1/lib"
+                mount_nfs "/var/log/pterodactyl" "$NFS_SERVER:$DOCKER_VOL_PATH_EXTERNAL/pterodactyl/$1/log"
+                mount_nfs "/tmp/pterodactyl" "$NFS_SERVER:$DOCKER_VOL_PATH_EXTERNAL/pterodactyl/$1/tmp"
+                mount_nfs "/etc/ssl/certs" "$NFS_SERVER:$DOCKER_VOL_PATH_EXTERNAL/pterodactyl/$1/certs"
+                deploy_service "$1" "$1.yml"
+                break
+                ;;
+            *)
+                echo "Invalid choice. Please select a valid option."
+                ;;
+        esac
+    done
+}
 start_from_scratch() {
     sudo docker stop $(sudo docker ps -aq) 2>/dev/null
     sudo docker rm $(sudo docker ps -aq) 2>/dev/null
@@ -250,6 +308,16 @@ select opt in "${options[@]}"; do
         "Pelican-Wing01")
             install_mount_dependencies
             choose_action_pelican_wing "$service_name"
+            exit
+            ;;
+        "Pterodactyl-Panel")
+            install_mount_dependencies
+            choose_action_pterodactyl_panel "$service_name"
+            exit
+            ;;
+        "Pterodactyl-Wing01")
+            install_mount_dependencies
+            choose_action_pterodactyl_wing "$service_name"
             exit
             ;;
         "Code-Server")
