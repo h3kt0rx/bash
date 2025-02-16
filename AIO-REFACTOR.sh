@@ -144,7 +144,6 @@ choose_action_pelican_wing() {
                 mount_nfs "/var/lib/pelican" "$NFS_SERVER:$DOCKER_VOL_PATH_EXTERNAL/pelican/$1/lib"
                 mount_nfs "/var/log/pelican" "$NFS_SERVER:$DOCKER_VOL_PATH_EXTERNAL/pelican/$1/log"
                 mount_nfs "/tmp/pelican" "$NFS_SERVER:$DOCKER_VOL_PATH_EXTERNAL/pelican/$1/tmp"
-                mount_nfs "/etc/ssl/certs" "$NFS_SERVER:$DOCKER_VOL_PATH_EXTERNAL/pelican/$1/certs"
                 break
                 ;;
             "Deploy/Re-Create the Service")
@@ -157,7 +156,6 @@ choose_action_pelican_wing() {
                 mount_nfs "/var/lib/pelican" "$NFS_SERVER:$DOCKER_VOL_PATH_EXTERNAL/pelican/$1/lib"
                 mount_nfs "/var/log/pelican" "$NFS_SERVER:$DOCKER_VOL_PATH_EXTERNAL/pelican/$1/log"
                 mount_nfs "/tmp/pelican" "$NFS_SERVER:$DOCKER_VOL_PATH_EXTERNAL/pelican/$1/tmp"
-                mount_nfs "/etc/ssl/certs" "$NFS_SERVER:$DOCKER_VOL_PATH_EXTERNAL/pelican/$1/certs"
                 deploy_service "$1" "$1.yml"
                 break
                 ;;
@@ -205,7 +203,6 @@ choose_action_pterodactyl_wing() {
                 mount_nfs "/var/lib/pterodactyl" "$NFS_SERVER:$DOCKER_VOL_PATH_EXTERNAL/pterodactyl/$1/lib"
                 mount_nfs "/var/log/pterodactyl" "$NFS_SERVER:$DOCKER_VOL_PATH_EXTERNAL/pterodactyl/$1/log"
                 mount_nfs "/tmp/pterodactyl" "$NFS_SERVER:$DOCKER_VOL_PATH_EXTERNAL/pterodactyl/$1/tmp"
-                mount_nfs "/etc/ssl/certs" "$NFS_SERVER:$DOCKER_VOL_PATH_EXTERNAL/pterodactyl/$1/certs"
                 break
                 ;;
             "Deploy/Re-Create the Service")
@@ -218,7 +215,6 @@ choose_action_pterodactyl_wing() {
                 mount_nfs "/var/lib/pterodactyl" "$NFS_SERVER:$DOCKER_VOL_PATH_EXTERNAL/pterodactyl/$1/lib"
                 mount_nfs "/var/log/pterodactyl" "$NFS_SERVER:$DOCKER_VOL_PATH_EXTERNAL/pterodactyl/$1/log"
                 mount_nfs "/tmp/pterodactyl" "$NFS_SERVER:$DOCKER_VOL_PATH_EXTERNAL/pterodactyl/$1/tmp"
-                mount_nfs "/etc/ssl/certs" "$NFS_SERVER:$DOCKER_VOL_PATH_EXTERNAL/pterodactyl/$1/certs"
                 deploy_service "$1" "$1.yml"
                 break
                 ;;
