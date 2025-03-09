@@ -10,7 +10,7 @@ DOCKER_VOL_PATH_EXTERNAL="/mnt/TrueNAS-02/Docker/docker_vol"
 LOGS_PATH_EXTERNAL="/mnt/TrueNAS-02/Docker/docker_vol/ALL_LOGS"
 
 # Define the prompt options
-options=("Docker" "Automount YAML" "Automount docker_vol" "Install Coral-TPU" "Install Pelican Panel" "Bazarr" "Cloudflared" "Code-Server" "CrowdSec" "Flaresolverr" "Frigate" "HomeAssistant" "Homepage" "Hoshinova" "InvoiceShelf" "Jellyfin" "Jellyseerr" "Lancache" "MineCraft-01" "MineCraft-02" "MQTT" "NetBoot_XYZ" "NextPVR" "PalWorld" "Pelican-Panel" "Pelican-Wing01" "Pterodactyl-Panel" "Pterodactyl-Wing01" "Prowlarr" "qBittorrent" "qBittorrent-Gluetun" "Radarr" "Recyclarr" "Semaphore" "Sonarr" "stirlingPDF" "Tdarr" "Traefik" "UptimeKuma" "Vaultwarden" "WallOS" "Watchtower" "Start From Scratch")
+options=("Docker" "Automount YAML" "Automount docker_vol" "Install Coral-TPU" "Install Pelican Panel" "Bazarr" "ChangeDetection" "Cloudflared" "Code-Server" "CrowdSec" "Flaresolverr" "Frigate" "HomeAssistant" "Homepage" "Hoshinova" "InvoiceShelf" "Jellyfin" "Jellyseerr" "Lancache" "MineCraft-01" "MineCraft-02" "MQTT" "NetBoot_XYZ" "NextPVR" "PalWorld" "Pelican-Panel" "Pelican-Wing01" "Pterodactyl-Panel" "Pterodactyl-Wing01" "Prowlarr" "qBittorrent" "qBittorrent-Gluetun" "Radarr" "Recyclarr" "Semaphore" "Sonarr" "stirlingPDF" "Tdarr" "Traefik" "UptimeKuma" "Vaultwarden" "WallOS" "Watchtower" "Start From Scratch")
 
 # Functions
 install_docker() {
@@ -315,7 +315,7 @@ select opt in "${options[@]}"; do
         "Install Pelican Panel")
             install_pelican_panel_host
             ;;
-        "Bazarr" | "CrowdSec" | "Frigate" | "HomeAssistant" | "Homepage" | "Hoshinova" | "InvoiceShelf" | "Jellyfin" | "Jellyseerr" | "Lancache" | "MineCraft-01" | "MineCraft-02" | "MQTT" | "NetBoot_XYZ" | "NextPVR" | "Prowlarr" | "qBittorrent" | "qBittorrent-Gluetun" | "Radarr" |"Recyclarr" | "Semaphore" | "Sonarr" | "stirlingPDF" | "Tdarr" | "Traefik" | "UptimeKuma" | "Vaultwarden")
+        "Bazarr" | "ChangeDetection" | "CrowdSec" | "Frigate" | "HomeAssistant" | "Homepage" | "Hoshinova" | "InvoiceShelf" | "Jellyfin" | "Jellyseerr" | "Lancache" | "MineCraft-01" | "MineCraft-02" | "MQTT" | "NetBoot_XYZ" | "NextPVR" | "Prowlarr" | "qBittorrent" | "qBittorrent-Gluetun" | "Radarr" |"Recyclarr" | "Semaphore" | "Sonarr" | "stirlingPDF" | "Tdarr" | "Traefik" | "UptimeKuma" | "Vaultwarden")
             install_mount_dependencies
             choose_action "$service_name"
             exit
