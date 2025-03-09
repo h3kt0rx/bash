@@ -10,7 +10,7 @@ DOCKER_VOL_PATH_EXTERNAL="/mnt/TrueNAS-02/Docker/docker_vol"
 LOGS_PATH_EXTERNAL="/mnt/TrueNAS-02/Docker/docker_vol/ALL_LOGS"
 
 # Define the prompt options
-options=("Docker" "Automount YAML" "Automount docker_vol" "Install Coral-TPU" "Install Pelican Panel" "Bazarr" "Cloudflared" "Code-Server" "Flaresolverr" "Frigate" "HomeAssistant" "Homepage" "Hoshinova" "InvoiceShelf" "Jellyfin" "Jellyseerr" "Lancache" "MineCraft-01" "MineCraft-02" "MQTT" "NetBoot_XYZ" "NextPVR" "PalWorld" "Pelican-Panel" "Pelican-Wing01" "Pterodactyl-Panel" "Pterodactyl-Wing01" "Prowlarr-Gluetun" "qBittorrent" "qBittorrent-Gluetun" "Radarr" "Recyclarr" "Semaphore" "Sonarr" "stirlingPDF" "Tdarr" "Traefik" "UptimeKuma" "Vaultwarden" "WallOS" "Watchtower" "Start From Scratch")
+options=("Docker" "Automount YAML" "Automount docker_vol" "Install Coral-TPU" "Install Pelican Panel" "Bazarr" "Cloudflared" "Code-Server" "CrowdSec" "Flaresolverr" "Frigate" "HomeAssistant" "Homepage" "Hoshinova" "InvoiceShelf" "Jellyfin" "Jellyseerr" "Lancache" "MineCraft-01" "MineCraft-02" "MQTT" "NetBoot_XYZ" "NextPVR" "PalWorld" "Pelican-Panel" "Pelican-Wing01" "Pterodactyl-Panel" "Pterodactyl-Wing01" "Prowlarr" "qBittorrent" "qBittorrent-Gluetun" "Radarr" "Recyclarr" "Semaphore" "Sonarr" "stirlingPDF" "Tdarr" "Traefik" "UptimeKuma" "Vaultwarden" "WallOS" "Watchtower" "Start From Scratch")
 
 # Functions
 install_docker() {
@@ -43,6 +43,7 @@ mount_nfs() {
     local mount_point=$1
     local nfs_path=$2
     sudo mkdir -p "$mount_point"
+    sudo chattr +i -R "$mount_point"
     echo "$nfs_path $mount_point  nfs      rw,async,noatime,hard,vers=$NFS_VERSION    0    0" | sudo tee -a /etc/fstab
     sudo systemctl daemon-reload
     sudo mount -t nfs "$nfs_path" "$mount_point"
@@ -70,6 +71,12 @@ install_pelican_panel_host() {
 
     curl -sS https://getcomposer.org/installer | sudo php -- --install-dir=/usr/local/bin --filename=composer
     sudo composer install --no-dev --optimize-autoloader
+
+    sudo apt install -y python3-certbot-nginx
+ #   sudo certbot -d example.com --manual --preferred-challenges dns certonly
+ #   sudo crontab -e
+ #   0 23 * * * certbot renew --quiet --deploy-hook "systemctl restart nginx"
+ #   mount_nfs "/var/lib/pelican" "$NFS_SERVER:$DOCKER_VOL_PATH_EXTERNAL/pelican/pelican-wing01/lib"
 }
 
 deploy_service() {
@@ -87,7 +94,7 @@ choose_action() {
         case $action in
             "Mount Directories")
                 mount_nfs "/docker_vol/$1" "$NFS_SERVER:$DOCKER_VOL_PATH_EXTERNAL/$1"
-                mount_nfs "/docker_vol/ALL_LOGS/$1" "$NFS_SERVER:$LOGS_PATH_EXTERNAL/$1"
+                # mount_nfs "/docker_vol/ALL_LOGS/$1" "$NFS_SERVER:$LOGS_PATH_EXTERNAL/$1"
                 break
                 ;;
             "Deploy/Re-Create the Service")
@@ -96,7 +103,7 @@ choose_action() {
                 ;;
             "Both")
                 mount_nfs "/docker_vol/$1" "$NFS_SERVER:$DOCKER_VOL_PATH_EXTERNAL/$1"
-                mount_nfs "/docker_vol/ALL_LOGS/$1" "$NFS_SERVER:$LOGS_PATH_EXTERNAL/$1"
+                # mount_nfs "/docker_vol/ALL_LOGS/$1" "$NFS_SERVER:$LOGS_PATH_EXTERNAL/$1"
                 deploy_service "$1" "$1.yml"
                 break
                 ;;
@@ -106,7 +113,22 @@ choose_action() {
         esac
     done
 }
-
+choose_action_service_only() {
+    echo ""
+    echo ""
+    echo -e "\033[32mWhat action do you want to do for \033[31m$1\033[31m\033[32m\033[0m?"
+    select action in "Mount Directories" "Deploy/Re-Create the Service" "Both"; do
+        case $action in
+            "Deploy/Re-Create the Service")
+                deploy_service "$1" "$1.yml"
+                break
+                ;;
+            *)
+                echo "Invalid choice. Please select a valid option."
+                ;;
+        esac
+    done
+}
 choose_action_pelican_panel() {
     echo ""
     echo ""
@@ -139,11 +161,11 @@ choose_action_pelican_wing() {
     select action in "Mount Directories" "Deploy/Re-Create the Service" "Both"; do
         case $action in
             "Mount Directories")
-                mount_nfs "/var/lib/docker/containers" "$NFS_SERVER:$DOCKER_VOL_PATH_EXTERNAL/pelican/$1/containers"
-                mount_nfs "/etc/pelican" "$NFS_SERVER:$DOCKER_VOL_PATH_EXTERNAL/pelican/$1/etc"
+ #               mount_nfs "/var/lib/docker/containers" "$NFS_SERVER:$DOCKER_VOL_PATH_EXTERNAL/pelican/$1/containers"
+ #               mount_nfs "/etc/pelican" "$NFS_SERVER:$DOCKER_VOL_PATH_EXTERNAL/pelican/$1/etc"
                 mount_nfs "/var/lib/pelican" "$NFS_SERVER:$DOCKER_VOL_PATH_EXTERNAL/pelican/$1/lib"
-                mount_nfs "/var/log/pelican" "$NFS_SERVER:$DOCKER_VOL_PATH_EXTERNAL/pelican/$1/log"
-                mount_nfs "/tmp/pelican" "$NFS_SERVER:$DOCKER_VOL_PATH_EXTERNAL/pelican/$1/tmp"
+  #              mount_nfs "/var/log/pelican" "$NFS_SERVER:$DOCKER_VOL_PATH_EXTERNAL/pelican/$1/log"
+   #             mount_nfs "/tmp/pelican" "$NFS_SERVER:$DOCKER_VOL_PATH_EXTERNAL/pelican/$1/tmp"
                 break
                 ;;
             "Deploy/Re-Create the Service")
@@ -236,7 +258,9 @@ start_from_scratch() {
     # Verify that /docker_vol is unmounted
     if mount | grep -q "/docker_vol"; then
         echo "Warning: /docker_vol is still mounted. Trying again..."
-        sudo umount -R /docker_vol/
+        sudo umount -R /docker_vol/*/*
+        sudo umount -R /docker_vol/*
+        sudo umount -R /docker_vol
     else
         echo "/docker_vol successfully unmounted."
     fi
@@ -291,9 +315,21 @@ select opt in "${options[@]}"; do
         "Install Pelican Panel")
             install_pelican_panel_host
             ;;
-        "Bazarr" | "Cloudflared" | "CrowdSec" | "Flaresolverr" | "Frigate" | "HomeAssistant" | "Homepage" | "Hoshinova" | "InvoiceShelf" | "Jellyfin" | "Jellyseerr" | "Lancache" | "MineCraft-01" | "MineCraft-02" | "MQTT" | "NetBoot_XYZ" | "NextPVR" | "PalWorld" | "Prowlarr-Gluetun" | "qBittorrent" | "qBittorrent-Gluetun" | "Radarr" |"Recyclarr" | "Semaphore" | "Sonarr" | "stirlingPDF" | "Tdarr" | "Traefik" | "UptimeKuma" | "Vaultwarden" | "WallOS" | "Watchtower")
+        "Bazarr" | "CrowdSec" | "Frigate" | "HomeAssistant" | "Homepage" | "Hoshinova" | "InvoiceShelf" | "Jellyfin" | "Jellyseerr" | "Lancache" | "MineCraft-01" | "MineCraft-02" | "MQTT" | "NetBoot_XYZ" | "NextPVR" | "Prowlarr" | "qBittorrent" | "qBittorrent-Gluetun" | "Radarr" |"Recyclarr" | "Semaphore" | "Sonarr" | "stirlingPDF" | "Tdarr" | "Traefik" | "UptimeKuma" | "Vaultwarden")
             install_mount_dependencies
             choose_action "$service_name"
+            exit
+            ;;
+        "Cloudflared")
+            choose_action_service_only "$service_name"
+            exit
+            ;;
+        "Flaresolverr")
+            choose_action_service_only "$service_name"
+            exit
+            ;;
+        "Watchtower")
+            choose_action_service_only "$service_name"
             exit
             ;;
         "Pelican-Panel")
@@ -318,7 +354,9 @@ select opt in "${options[@]}"; do
             ;;
         "Code-Server")
             install_mount_dependencies
-            mount_nfs "/docker_vol" "$NFS_SERVER:$DOCKER_VOL_PATH_EXTERNAL"
+            sudo mkdir -p /docker_vol/code-server-mount
+            sudo chattr -i /docker_vol/code-server-mount
+            sudo mount -t nfs "$NFS_SERVER:$DOCKER_VOL_PATH_EXTERNAL" "/docker_vol/code-server-mount"
             choose_action "$service_name"
             exit
             ;;
